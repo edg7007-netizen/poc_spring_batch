@@ -79,6 +79,13 @@
             <artifactId>s3</artifactId>
         </dependency>
 
+        <!-- Spring Boot Docker Compose – auto-manages local containers -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-docker-compose</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

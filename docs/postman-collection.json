@@ -1,0 +1,158 @@
+{
+  "info": {
+    "name": "Spring Batch Phone Scoring",
+    "description": "API collection for the Spring Batch Phone Scoring POC.\n\nPre-requisites:\n1. Start the application with the `local` profile\n2. Run the batch job first (POST /api/v1/batch/run) to populate the feature store\n3. Then query cheat sheets and feature store data",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Batch Operations",
+      "description": "Endpoints for managing the batch job and querying the feature store.",
+      "item": [
+        {
+          "name": "1. Trigger Batch Job",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch/run",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "batch", "run"]
+            },
+            "description": "Manually triggers the phone score batch job. This reads mock data from the 3 sources (API, DB replica, S3), computes reach and recovery scores, writes to the feature store, and dispatches the sorted phone list to the configured dialer.\n\n**Run this first** to populate the feature store before querying cheat sheets."
+          }
+        },
+        {
+          "name": "2. Get Feature Store (today)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch/feature-store",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "batch", "feature-store"]
+            },
+            "description": "Returns all feature store entries for today, sorted by reach score descending."
+          }
+        },
+        {
+          "name": "3. Get Feature Store (specific date)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch/feature-store?date=2026-03-28",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "batch", "feature-store"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-03-28",
+                  "description": "ISO date (YYYY-MM-DD). Defaults to today if omitted."
+                }
+              ]
+            },
+            "description": "Returns all feature store entries for a specific date, sorted by reach score descending."
+          }
+        },
+        {
+          "name": "4. Get Phone History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch/feature-store/history/5551001001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "batch", "feature-store", "history", "5551001001"]
+            },
+            "description": "Returns the full audit history for a given phone number from the feature store."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cheat Sheet (AI-generated)",
+      "description": "Endpoints that generate negotiation cheat sheets using AI (or a mock fallback).",
+      "item": [
+        {
+          "name": "1. Cheat Sheet by Phone Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cheat-sheet/by-phone/5551001001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cheat-sheet", "by-phone", "5551001001"]
+            },
+            "description": "Generates a negotiation cheat sheet for the given phone number. Uses the latest entry from the feature store, fills a prompt template, and calls the LLM (or mock provider).\n\n**Note:** Run the batch job first to ensure data exists."
+          }
+        },
+        {
+          "name": "2. Cheat Sheet by User ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cheat-sheet/by-user/U001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cheat-sheet", "by-user", "U001"]
+            },
+            "description": "Generates a negotiation cheat sheet for the given user ID."
+          }
+        },
+        {
+          "name": "3. Cheat Sheet – unknown phone",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cheat-sheet/by-phone/9999999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cheat-sheet", "by-phone", "9999999999"]
+            },
+            "description": "Shows the response when a phone number is not found in the feature store."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Swagger / OpenAPI",
+      "description": "Quick links to the auto-generated API documentation.",
+      "item": [
+        {
+          "name": "Swagger UI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swagger-ui.html",
+              "host": ["{{baseUrl}}"],
+              "path": ["swagger-ui.html"]
+            },
+            "description": "Opens the Swagger UI in your browser."
+          }
+        },
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api-docs"]
+            },
+            "description": "Returns the raw OpenAPI 3.0 spec in JSON format."
+          }
+        }
+      ]
+    }
+  ]
+}
