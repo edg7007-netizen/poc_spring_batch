@@ -1,0 +1,143 @@
+{
+  "info": {
+    "name": "Phone Batch POC",
+    "description": "Postman collection for the Spring Batch Phone Scoring & Dialer Dispatch POC.\n\nWorkflow:\n1. Run the batch job (POST /batch/run) to populate the feature store.\n2. Query the cheat-sheet endpoint for any of the 10 mock phone numbers.\n3. Browse the H2 console at http://localhost:8080/h2-console.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Batch Job",
+      "item": [
+        {
+          "name": "1 — Trigger batch job",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch/run",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "batch", "run"]
+            },
+            "description": "Manually triggers the phone score batch job. The job reads mock data from three sources (API, DB read-replica, S3), computes reach and recovery scores, persists them to the feature store, and dispatches the ranked list to the configured dialer."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"COMPLETED\",\n  \"message\": \"Batch job executed successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cheat Sheet",
+      "item": [
+        {
+          "name": "2 — Get cheat-sheet (555-0001)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cheat-sheet/555-0001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cheat-sheet", "555-0001"]
+            },
+            "description": "Fetches the latest feature store entry for phone 555-0001 and returns AI-generated negotiation advice. Run the batch job first to populate the feature store."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"phoneNumber\": \"555-0001\",\n  \"advice\": \"Mock advice for 555-0001: Balance owed: $1200.50. ReachScore: 0.6543. Consider payment plan options.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "3 — Get cheat-sheet (555-0006)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cheat-sheet/555-0006",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cheat-sheet", "555-0006"]
+            },
+            "description": "Highest answer rate phone (0.91). Expect the highest reach score."
+          },
+          "response": []
+        },
+        {
+          "name": "4 — Get cheat-sheet (555-0010)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cheat-sheet/555-0010",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cheat-sheet", "555-0010"]
+            },
+            "description": "Highest balance owed ($12,000). Interesting recovery profile."
+          },
+          "response": []
+        },
+        {
+          "name": "5 — Get cheat-sheet (not found)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cheat-sheet/999-0000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cheat-sheet", "999-0000"]
+            },
+            "description": "Phone that does not exist in the feature store — expect a 404 response."
+          },
+          "response": [
+            {
+              "name": "Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "header": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "H2 Console (browser)",
+      "item": [
+        {
+          "name": "6 — Open H2 Console",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/h2-console",
+              "host": ["{{baseUrl}}"],
+              "path": ["h2-console"]
+            },
+            "description": "Opens the H2 web console. Use these settings:\n  JDBC URL: jdbc:h2:mem:phonebatch\n  User: sa\n  Password: (leave empty)\n\nTry: SELECT * FROM feature_store ORDER BY reach_score DESC;"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
