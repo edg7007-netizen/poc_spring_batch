@@ -45,10 +45,6 @@ public class S3PhoneDataReader implements ItemReader<PhoneNumberRawData> {
         return null;
     }
 
-    public void reset() {
-        index = 0;
-    }
-
     public List<PhoneNumberRawData> readAll() {
         return data;
     }

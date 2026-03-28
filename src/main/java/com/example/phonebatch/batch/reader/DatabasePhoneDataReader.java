@@ -43,10 +43,6 @@ public class DatabasePhoneDataReader implements ItemReader<PhoneNumberRawData> {
         return null;
     }
 
-    public void reset() {
-        index = 0;
-    }
-
     public List<PhoneNumberRawData> readAll() {
         return data;
     }

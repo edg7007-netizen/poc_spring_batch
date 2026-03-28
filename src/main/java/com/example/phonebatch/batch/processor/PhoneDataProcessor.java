@@ -3,28 +3,32 @@ package com.example.phonebatch.batch.processor;
 import com.example.phonebatch.domain.PhoneNumberRawData;
 import com.example.phonebatch.domain.ScoredPhoneNumber;
 import com.example.phonebatch.service.ScoringService;
+import com.example.phonebatch.service.ScoringStats;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
+/**
+ * Scores each phone number using dataset-wide min/max statistics that were
+ * pre-computed by {@link com.example.phonebatch.service.ScoringStatsListener}
+ * before the step started. This ensures accurate relative normalisation across
+ * the full dataset rather than within individual chunks.
+ */
 @Component
 public class PhoneDataProcessor implements ItemProcessor<PhoneNumberRawData, ScoredPhoneNumber> {
 
     private final ScoringService scoringService;
+    private final ScoringStats scoringStats;
 
-    public PhoneDataProcessor(ScoringService scoringService) {
+    public PhoneDataProcessor(ScoringService scoringService, ScoringStats scoringStats) {
         this.scoringService = scoringService;
+        this.scoringStats = scoringStats;
     }
 
-    /**
-     * Processes a single item by scoring it in isolation. Because min/max normalization
-     * requires the full dataset, calling scoreAll with a single item means each normalized
-     * field defaults to {@link ScoringService#MIDPOINT}. In production, pre-compute
-     * dataset-wide min/max stats (e.g. via a JobExecutionListener) and pass them here.
-     */
     @Override
     public ScoredPhoneNumber process(PhoneNumberRawData item) {
-        return scoringService.scoreAll(List.of(item)).get(0);
+        return scoringService.score(item,
+                scoringStats.getMinLoans(), scoringStats.getMaxLoans(),
+                scoringStats.getMinPtp(),   scoringStats.getMaxPtp(),
+                scoringStats.getMinBalance(), scoringStats.getMaxBalance());
     }
 }

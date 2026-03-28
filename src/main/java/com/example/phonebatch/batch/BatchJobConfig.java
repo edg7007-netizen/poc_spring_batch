@@ -5,6 +5,8 @@ import com.example.phonebatch.batch.reader.CompositePhoneDataReader;
 import com.example.phonebatch.batch.writer.FeatureStoreWriter;
 import com.example.phonebatch.domain.PhoneNumberRawData;
 import com.example.phonebatch.domain.ScoredPhoneNumber;
+import com.example.phonebatch.service.ScoringStats;
+import com.example.phonebatch.service.ScoringStatsListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -18,6 +20,11 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class BatchJobConfig {
 
     @Bean
+    public ScoringStats scoringStats() {
+        return new ScoringStats();
+    }
+
+    @Bean
     public Job phoneScoreJob(JobRepository jobRepository, Step phoneScoreStep) {
         return new JobBuilder("phoneScoreJob", jobRepository)
             .start(phoneScoreStep)
@@ -29,12 +36,14 @@ public class BatchJobConfig {
                                 PlatformTransactionManager transactionManager,
                                 CompositePhoneDataReader reader,
                                 PhoneDataProcessor processor,
-                                FeatureStoreWriter writer) {
+                                FeatureStoreWriter writer,
+                                ScoringStatsListener scoringStatsListener) {
         return new StepBuilder("phoneScoreStep", jobRepository)
-            .<PhoneNumberRawData, ScoredPhoneNumber>chunk(10, transactionManager)
+            .<PhoneNumberRawData, ScoredPhoneNumber>chunk(100, transactionManager)
             .reader(reader)
             .processor(processor)
             .writer(writer)
+            .listener(scoringStatsListener)
             .build();
     }
 }
